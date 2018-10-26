@@ -4,6 +4,7 @@ MANIFEST
 coverage.xml
 nosetests.xml
 junit-report.xml
+report.xml
 pylint.txt
 .cache/
 .pytest_cache/
