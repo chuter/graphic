@@ -6,6 +6,8 @@ import os
 import sys
 
 from setuptools import find_packages, setup
+from setuptools.command.test import test as TestCommand
+
 
 DESCRIPTION = 'More phthonic, humanize way to play with graphdb'
 URL = 'https://github.com/chuter/graphic'
@@ -27,6 +29,30 @@ TEST_REQUIREMENTS = [
 
 here = os.path.abspath(os.path.dirname(__file__))
 src = os.path.join(here, 'src')
+
+
+class PyTest(TestCommand):
+    user_options = [('pytest-args=', 'a', "Arguments to pass into py.test")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        try:
+            from multiprocessing import cpu_count
+            self.pytest_args = ['-n', str(cpu_count())]
+        except (ImportError, NotImplementedError):
+            self.pytest_args = ['-n', '1']
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
+
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist')
@@ -79,6 +105,7 @@ setup(
     keywords=[
         'graph', 'neo4j', 'graph algorithms', 'client'
     ],
+    cmdclass={'test': PyTest},
     tests_require=TEST_REQUIREMENTS,
     setup_requires=['pytest-runner'],
     extras_require={
