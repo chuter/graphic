@@ -32,7 +32,7 @@ flake8:
 	pipenv run flake8 --exclude=.tox,*.egg,build,data .
 
 coverage:
-	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml tests
+	pipenv run py.test --cov-config .coveragerc --verbose --cov-report term --cov-report xml --cov=graphic tests
 
 test-readme:
 	pip install --upgrade twine
@@ -41,4 +41,4 @@ test-readme:
 
 publish:
 	twine upload dist/*
-	rm -fr build dist .egg
+	rm -fr build dist .egg graphic.egg-info
