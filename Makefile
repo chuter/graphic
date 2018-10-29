@@ -1,7 +1,7 @@
-.PHONY: help init test ci flake8 publish
+.PHONY: init help test ci flake8 publish
 
+.DEFAULT_GOAL := init
 
-.DEFAULT: help
 help:
 	@echo make init
 	@echo        prepare development environment, use only once
@@ -17,11 +17,11 @@ help:
 	@echo        build sphinx documentation
 	@echo make publish
 	@echo        upload to pypi
-
-
 init:
 	pip install pipenv --upgrade
 	pipenv install --dev --skip-lock
+	pipenv run python setup.py -q install
+
 test:
 	# This runs all of the tests
 	detox
