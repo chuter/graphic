@@ -14,6 +14,6 @@ The target of this project is:
 coming soon....
 
 
-.. |Build Status| image:: https://ci.appveyor.com/api/projects/status/takc01x7pp1mw90y/branch/master?svg=true
+.. |Build Status| image:: https://travis-ci.org/chuter/graphic.svg?branch=master
 .. |Coverage Status| image:: https://codecov.io/gh/chuter/graphic/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/chuter/graphic
