@@ -36,17 +36,23 @@ class TestSingleEntitySingleMatchQueryBuild:
         ),
         (
             graphic.node("User", uid=12345, name="chuter")._as('geek'),
-            (
+            ((
                 r'MATCH (geek:User) WHERE (geek.uid=12345 AND '
                 r'geek.name="chuter") RETURN id(geek) LIMIT 20'
-            )
+            ), (
+                r'MATCH (geek:User) WHERE (geek.name="chuter" AND '
+                r'geek.uid=12345") RETURN id(geek) LIMIT 20'
+            ), )
         )
     ])
     def test_build_only_dueto_node(self, node, expected_cyphe):
         q = gquery(node)
         remote_graph = graphic.use()
 
-        assert expected_cyphe == remote_graph.compile(q)
+        if isinstance(expected_cyphe, (tuple, list)):
+            assert remote_graph.compile(q) in expected_cyphe
+        else:
+            assert expected_cyphe in remote_graph.compile(q)
 
     def test_generate_name_for_entity(self):
         # TODO implemant
