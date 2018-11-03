@@ -29,7 +29,7 @@ class TestGraphic:
     def test_interface_design_for_read():
         remote_graph = graphic.use_neo4j('graph_name', **credits)
 
-        query.as('another_query_label')(
+        query._as('another_query_label')(
             node | edge | (diedge & path),
             optional=True
         )  # query object

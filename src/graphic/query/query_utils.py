@@ -3,6 +3,73 @@
 
 import copy
 
+from .func import Func
+from .func import eq
+from .func import lookup_func
+
+
+class Expression(object):
+    r"""
+    Used in query filter clause:
+
+    only support follow formats:
+        id=12
+        a__id=12
+        id__gte=12
+        a__age__gt=30
+
+    """
+
+    __slots__ = ('_context')
+
+    LOOKUP_SPLIT_BY = '__'
+
+    @classmethod
+    def parse(cls, exp_str, val) -> Func:
+        parts = exp_str.split(cls.LOOKUP_SPLIT_BY)
+
+        _size = len(parts)
+        if _size == 1:  # id=2
+            return eq(exp_str, val)
+        elif _size == 2:
+            target_func = lookup_func(parts[-1])
+            if target_func is None:  # a__id=12
+                return eq(exp_str, val)
+            else:  # id__gte=12
+                return target_func(cls.LOOKUP_SPLIT_BY.join(parts[0:-1]), val)
+        elif _size == 3:  # a__age__gt=30
+            target_func = lookup_func(parts[-1])
+            if target_func is None:
+                raise ValueError('Not support func {} yet'.format(parts[-1]))
+
+            return target_func(cls.LOOKUP_SPLIT_BY.join(parts[0:-1]), val)
+
+
+class Field(object):
+
+    __slots__ = ('_ent', '_field_name')
+
+    PK = 'id'
+
+    def __init__(self, graph_entity, field_name):
+        self._ent = graph_entity
+        self._field_name = field_name
+
+    def __call__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash(self.__str__())
+
+    def __str__(self):
+        if self._field_name == self.PK:
+            return '{}({})'.format(self.PK, self._ent.alias)
+
+        return '{}.{}'.format(
+            self._ent.alias,
+            self._field_name
+        )
+
 
 class Q(object):
     AND = 'AND'
@@ -11,7 +78,11 @@ class Q(object):
     __slots__ = ('_children', '_connector', '_negated')
 
     def __init__(self, *args, **kwargs):
-        self._children = list(args) + sorted(kwargs.items())
+        self._children = list(args)
+
+        for exp_str, val in kwargs.items():
+            self._children.append(Expression.parse(exp_str, val))
+
         self._connector = self.AND
         self._negated = False
 
@@ -28,8 +99,8 @@ class Q(object):
         return obj
 
     def __str__(self):
-        template = '(NOT (%s: %s))' if self.negated else '(%s: %s)'
-        return template % (
+        tmpl = '(NOT (%s: %s))' if self.negated else '(%s: %s)'
+        return tmpl % (
             self.connector,
             ', '.join(str(c) for c in self.children)
         )

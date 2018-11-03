@@ -4,7 +4,7 @@
 import copy
 
 from .graph import GraphEntity
-from .query.query_utils import Q
+from .query.query_utils import Q, Field, Expression
 
 
 __all__ = ['GQuery']
@@ -12,17 +12,19 @@ __all__ = ['GQuery']
 
 class Context(object):
 
-    __slots__ = ('_dict')
+    FIELD_LOOKUP_SPLIT_BYS = ('__', '.', )
+
+    __slots__ = ('_name_2_ent')
 
     def __init__(self):
-        self._dict = {}
+        self._name_2_ent = {}
 
     def __contains__(self, key):
-        return key in self._dict
+        return key in self._name_2_ent
 
     def clone(self):
         cloned = type(self)()
-        cloned._dict = copy.copy(self._dict)
+        cloned._name_2_ent = copy.copy(self._name_2_ent)
         return cloned
 
     def add(self, *entities):
@@ -30,52 +32,91 @@ class Context(object):
             raise TypeError('can only accept GraphEntity')
 
         for entity in entities:
-            entity.walk(lambda node_or_edge: (
-                self.add_ref(node_or_edge.alias, node_or_edge)
-                if node_or_edge.alias
-                else
-                None
-            ))
+            self._add(entity)
+
         return self
 
+    def _add(self, entity):
+        if entity.is_path():
+            raise NotImplementedError('not support path yet')
+
+        self.add_ref(entity.alias, entity)
+        if entity.is_edge():
+            for node in entity.nodes:
+                self.add_ref(node.alias, node)
+
     def add_ref(self, name, val):
-        if name in self._dict:
+        if name in self._name_2_ent:
             raise KeyError(
                 '{} has already to use to ref to {}'.format(
                     name,
-                    self._dict.get(name).__repr__()
+                    self._name_2_ent.get(name).__repr__()
                 )
             )
-        self._dict[name] = val
+        self._name_2_ent[name] = val
 
     def get(self, name):
         """
         Raises:
           KeyError
         """
-        return self._dict.get(name)
+        return self._name_2_ent.get(name)
+
+    def lookup_field(self, exp) -> Field:
+        """
+        Args:
+          exp: all support expressions: a__id, a.id, id
+        """
+
+        target_ent_alias = GraphEntity.DEFAULT_ALIAS
+        field_name = exp
+
+        for split_by in self.FIELD_LOOKUP_SPLIT_BYS:
+            if split_by in exp:
+                try:
+                    target_ent_alias, field_name = exp.split(split_by)
+                except:
+                    raise ValueError(exp)
+                else:
+                    break
+
+        target_ent = self.get(target_ent_alias)
+        return Field(target_ent, field_name)
 
 
 class GQuery(object):
+    # TODO(chuter): support path
+    _LIMIT = 20
 
-    __slots__ = ('_where', '_entities', '_context', '_limit', '_order_by')
+    __slots__ = ('_where', '_entities', '_context',
+                 '_select', '_limit', '_order_by')
 
     def __init__(self, *entities):
         self._where = Q()
         self._entities = entities[:]
         self._context = Context().add(*entities)
+        self._select = set()
+        self._limit = self._LIMIT
+        self._order_by = None
 
         for entity in entities:
-            for name, val in entity:
-                if entity.alias != '_':
-                    left_epr = '{}__{}__eq'.format(entity.alias, name)
-                else:
-                    left_epr = '{}__eq'.format(name)
-                kwargs = dict(((left_epr, val),))
-                self.filter(**kwargs)
+            self._add_filter_by_entity_properties(entity)
 
-        self._limit = 20
-        self._order_by = None
+    def _add_filter_by_entity_properties(self, entity):
+        for name, val in entity:
+            if entity.alias != entity.DEFAULT_ALIAS:
+                left_exp = Expression.LOOKUP_SPLIT_BY.join([
+                    entity.alias,
+                    name
+                ])
+            else:
+                left_exp = name
+            kwargs = dict(((left_exp, val),))
+            self.filter(**kwargs)
+
+        if entity.is_edge():
+            for node in entity.nodes:
+                self._add_filter_by_entity_properties(node)
 
     @property
     def context(self):
@@ -87,7 +128,11 @@ class GQuery(object):
 
     @property
     def where(self):
-        return self._where
+        return self._where._clone()
+
+    @property
+    def returns(self):
+        return frozenset(self._select)
 
     def filter(self, *qargs, **kwargs):
         """
@@ -105,9 +150,14 @@ class GQuery(object):
         self._where &= Q(*qargs, **kwargs)
         return self
 
-    def select(self):
-        # select files to return, aggregations support
-        pass
+    def select(self, *exps):
+        for exp_item in exps:
+            if isinstance(exp_item, str):
+                exp_item = self.context.lookup_field(exp_item)
+
+            self._select.add(exp_item)
+
+        return self
 
     def order_by(self, by=None):
         if by is None:

@@ -1,58 +1,30 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
-"""
-Compile the GQuery instance to string as cypher or graphql etc.
 
-"""
+from typing import Iterable
 
-from graphic.query import Q
-
-__all__ = ['compile']
+from graphic.query.func import Func, Aggregation
 
 
-LOOKUP_SPLIT_BY = '__'
-DEFAULT_REFTO = '_'
+__all__ = ['compile', 'build']
 
 
-# TODO(chuter) negated query support and cypher escape
+# TODO(chuter):
+#   1. compile to string and parameters
+#   2. cypher escape
+#   3. auto convert create to merge
 
-# TODO(chuter) kill DRY for field: field parse('user.id', 'user.name', ...)
-# filter, select, func, aggregations all need to parse that
-
-
-def hydrage_q(left_expr, val, context, func_lookup):
-    parts = left_expr.split(LOOKUP_SPLIT_BY)
-
-    if len(parts) < 2 or len(parts) > 3:
-        raise AttributeError('Not a legal expression: {}'.format(left_expr))
-
-    alias = DEFAULT_REFTO
-
-    if len(parts) == 2:
-        field, func_name = parts
-    else:
-        alias, field, func_name = parts
-
-    if alias not in context:
-        raise AttributeError('No such object named {} can reffer to'.format(
-            alias
-        ))
-
-    target_func = func_lookup(func_name)
-    if target_func is None:
-        raise ArithmeticError('No such func named {}'.format(func_name))
-
-    return target_func.hydrage(alias, field, val)
-
-
-def compile_where_clause(func_lookup, gquery):
+def compile_where_clause(gquery):
 
     def compile_q(q):
+        if isinstance(q, Func):
+            return q(lookup_field=gquery.context.lookup_field)
+
         if len(q) == 0:
             return ''
 
-        if isinstance(q, Q) and len(q) > 1:
+        if len(q) > 1:
             join_by = ' {} '.format(q.connector)
             return (
                 '({})'.format(
@@ -60,14 +32,7 @@ def compile_where_clause(func_lookup, gquery):
                 )
             )
 
-        if isinstance(q, tuple):
-            left_expr, val = q
-        else:
-            left_expr, val = q.children[0]
-        return hydrage_q(left_expr, val, gquery.context, func_lookup)
-
-    if gquery is None or func_lookup is None:
-        raise AttributeError
+        return compile_q(q.children[0])
 
     return compile_q(gquery.where)
 
@@ -80,20 +45,45 @@ def compile_match_clause(*entities):
                 return '({})'.format(entity.alias)
             else:
                 return '({}:{})'.format(entity.alias, ':'.join(entity.labels))
+        elif entity.is_edge():
+            _from = hydrage_entity(entity.node_from)
+            _to = hydrage_entity(entity.node_to)
+
+            if entity.type is None:
+                _rel = '[{}]'.format(entity.alias)
+            else:
+                _rel = '[{}:{}]'.format(entity.alias, entity.type)
+
+            if entity.with_direction:
+                tmpl = '{}-{}->{}'
+            else:
+                tmpl = '{}-{}-{}'
+
+            return tmpl.format(_from, _rel, _to)
+        elif entity.is_path():
+            raise NotImplementedError('Not support path yet!')
         else:
-            raise NotImplementedError('Not support edge and path yet!')
+            raise ValueError
 
     return ' '.join([
         hydrage_entity(entity) for entity in entities
     ])
 
 
-# TODO(chuter) implement and add aggreations support
-# only build the default clause: id(${alias})
 def compile_select_clause(gquery):
-    return ','.join([
-        'id({})'.format(ent.alias) for ent in gquery.queryfor
-    ])
+
+    def compile(select):
+        if isinstance(select, (Aggregation, Func)):
+            return select(lookup_field=gquery.context.lookup_field)
+
+        return select.__str__()
+
+    clause_parts = [compile(select) for select in gquery.returns]
+
+    if len(clause_parts) == 0:
+        return ','.join([ent.alias for ent in gquery.queryfor])
+
+    return ','.join(clause_parts)
 
 
 def compile_order_by(gquery):
@@ -110,23 +100,13 @@ def compile_order_by(gquery):
     if len(order_by_field) == 0:
         return ''
 
-    path_parts = order_by_field.split('.')
-    if len(path_parts) > 2:
-        raise AttributeError('{} is not a valid order by expression'.format(
-            order_by_field
-        ))
-
-    if len(path_parts) == 2 and path_parts[1] == 'id':
-        order_by_field = 'id({})'.format(path_parts[0])
-
-    return 'ORDER BY {} {}'.format(order_by_field, order_type)
+    target_field = gquery.context.lookup_field(order_by_field)
+    return 'ORDER BY {} {}'.format(target_field, order_type)
 
 
-# TODO(chuter) add edge and path support!!!!!
-# TODO(chuter) add pagination support!!!
-def compile(func_lookup, gquery, pretty=False):
+def compile(gquery, pretty=False) -> str:
     match_clause = compile_match_clause(*gquery.queryfor)
-    where_clause = compile_where_clause(func_lookup, gquery)
+    where_clause = compile_where_clause(gquery)
     select_clause = compile_select_clause(gquery)
 
     join_by = '\n' if pretty else ' '
@@ -140,3 +120,68 @@ def compile(func_lookup, gquery, pretty=False):
     clause_list.append('LIMIT {}'.format(gquery.limit()))
 
     return join_by.join(filter(lambda clause: len(clause) > 0, clause_list))
+
+
+# TODO(chuter) cypher escape full support
+def _encode_cypher_value(value):
+    if isinstance(value, str):
+        return '"{}"'.format(value)
+    else:
+        return value
+
+
+def _build_node(node):
+    key_vals = ','.join(
+        ['{}:{}'.format(key, _encode_cypher_value(val)) for key, val in node]
+    )
+
+    if len(key_vals) == 0:
+        return 'CREATE ({}:{})'.format(node.alias, ':'.join(node.labels))
+
+    return 'CREATE ({}:{} {{{}}})'.format(
+        node.alias,
+        ':'.join(node.labels),
+        key_vals
+    )
+
+
+def _build_relationship(relationship):
+    if relationship.type is None:
+        raise KeyError('New relationship must with type')
+
+    key_vals = ' '.join([
+        '{}:{}'.format(
+            key,
+            _encode_cypher_value(val)
+        ) for key, val in relationship
+    ])
+    if len(key_vals) == 0:
+        return 'CREATE ({})-[{}:{}]->({})'.format(
+            relationship.node_from.alias,
+            relationship.alias,
+            relationship.type,
+            relationship.node_to.alias,
+        )
+
+    return 'CREATE ({})-[{}:{} {{{}}}]->({})'.format(
+        relationship.node_from.alias,
+        relationship.alias,
+        relationship.type,
+        key_vals,
+        relationship.node_to.alias,
+    )
+
+
+def build(iterable_nodes, iterable_relationships=[]) -> Iterable:
+    nodes_set = set(iterable_nodes)
+    for rel in iterable_relationships:
+        nodes_set.add(rel.node_from)
+        nodes_set.add(rel.node_to)
+
+    relationships_set = set(iterable_relationships)
+
+    create_parts = [_build_node(node) for node in nodes_set]
+    create_parts.extend(
+        [_build_relationship(rel) for rel in relationships_set]
+    )
+    return '\n'.join(create_parts)

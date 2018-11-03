@@ -4,8 +4,8 @@
 # flake8: noqa
 
 from .meta import __version__
-from . import query as gquery
-from .shortcuts import node, gquery, use
+from .graph import Graph
+from .shortcuts import node, relationship, use_neo4j
 
 import logging
 

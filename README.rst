@@ -7,7 +7,7 @@ Graphic
 
 
 The target of this project is:
-**More pythonic, humanize way to play Algorithms with graphdb**
+**More pythonic, humanize way to play with graph model**
 
 ------------
 
