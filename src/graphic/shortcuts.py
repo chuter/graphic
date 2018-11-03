@@ -28,7 +28,7 @@ def node(*labels, **properties) -> Node:
 
 
 def relationship(node_from, node_to, type=None,
-                 with_direction=True, **properties) -> Relationship:
+                 with_direction=True, **properties) -> Relationship:  # noqa
     """
     Shorcut for build new relationship
 

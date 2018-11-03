@@ -20,6 +20,7 @@ def new_company_node(name):
         name.replace(' ', '')
     )
 
+
 company_nodes = [new_company_node(name) for name in company_names]
 
 

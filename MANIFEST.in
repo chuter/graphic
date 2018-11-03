@@ -5,3 +5,4 @@ include *.yml
 include Pipfile
 graft src
 include tests/*.py
+include examples/*.py

@@ -75,7 +75,7 @@ class Context(object):
             if split_by in exp:
                 try:
                     target_ent_alias, field_name = exp.split(split_by)
-                except:
+                except:  # noqa
                     raise ValueError(exp)
                 else:
                     break
