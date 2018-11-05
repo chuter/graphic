@@ -4,12 +4,12 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"neo4j" = "*"
 detox = "==0.13"
 tox = "==3.2.1"
 
 [dev-packages]
-pytest = "*"
+"neo4j" = "*"
+pytest = ">=2.8.0"
 pytest-cov = "*"
 pytest-mock = "*"
 pytest-xdist = "*"
