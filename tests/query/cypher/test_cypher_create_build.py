@@ -24,6 +24,8 @@ class TestCreateQueryBuild:
         assert cypher.find('CREATE (saras:Boss {uid:1234})') >= 0
         assert cypher.find(
             'CREATE (robert:Boss {uid:1234,name:"robert"})'
+        ) >= 0 or cypher.find(
+            'CREATE (robert:Boss {name:"robert",uid:1234})'
         ) >= 0
 
     def test_nodes_create_with_duplicate_node(self):

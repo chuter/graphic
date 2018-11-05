@@ -24,7 +24,7 @@ TEST_REQUIREMENTS = [
     'pytest-cov',
     'pytest-mock',
     'pytest-xdist',
-    'pytest>=2.8.0'
+    'pytest==3.9.2'
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

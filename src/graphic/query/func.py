@@ -5,7 +5,7 @@
 from typing import Any
 from six import add_metaclass
 
-from graphic.utils import is_py37
+from graphic.compat import is_py37
 
 
 class FuncMeta(type):

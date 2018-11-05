@@ -5,6 +5,7 @@ import warnings
 from importlib import import_module
 
 from .graph import RemoteGraph, Node, Relationship
+from .compat import ModuleNotFoundError
 
 
 def node(*labels, **properties) -> Node:

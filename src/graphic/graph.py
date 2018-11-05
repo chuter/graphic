@@ -112,9 +112,6 @@ class GraphEntity(Mapping, Hashable):
     @classmethod
     def __subclasshook__(cls, C):
         if cls is GraphEntity:
-            if not all(issubclass(C, c) for c in {Mapping, Hashable}):
-                return False
-
             return check_methods(
                 C,
                 "is_node", "is_path", "is_edge"
