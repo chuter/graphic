@@ -12,6 +12,7 @@ pylint.txt
 cover/
 build/
 docs/_build
+examples/settings.py
 *.egg-info
 *.pyc
 *.swp
