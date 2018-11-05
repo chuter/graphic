@@ -5,7 +5,7 @@
 
 from .meta import __version__
 from .graph import Graph
-from .shortcuts import node, relationship, use_neo4j
+from .shortcuts import node, link, relationship, use_neo4j
 
 import logging
 

@@ -28,11 +28,12 @@ def node(*labels, **properties) -> Node:
 
 
 def relationship(node_from, node_to, type=None,
-                 with_direction=True, **properties) -> Relationship:  # noqa
+                 with_direction=True, **properties) -> Relationship:
     """
     Shorcut for build new relationship
 
-    use relationship()._as('${alias}') to use the alias to identify the relationship
+    use relationship()._as('${alias}') to use the alias to identify the
+    relationship
 
     In the query context, if you reffer the relationship which occured in the
     prever statement, then, alias if useful
@@ -57,7 +58,7 @@ def relationship(node_from, node_to, type=None,
 def link(node_from, node_to, type=None, **properties) -> Relationship:
     """Create new relationship without derection of two nodes
     """
-    return Relationship(
+    return relationship(
         node_from,
         node_to,
         type=type,

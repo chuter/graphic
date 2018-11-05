@@ -118,10 +118,9 @@ class TestSingleRelationSingleMatchQueryCompile:
             r'MATCH (b)-[_]->(g) RETURN _ LIMIT 20'
         ),
         (
-            graphic.relationship(
+            graphic.link(
                 graphic.node()._as('b'),
                 graphic.node()._as('g'),
-                with_direction=False
             ),
             r'MATCH (b)-[_]-(g) RETURN _ LIMIT 20'
         ),
