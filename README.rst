@@ -2,7 +2,7 @@
 Graphic
 =========================
 
-|Build Status| |Coverage Status|
+|Pypi Release| |Python Version| |Build Status| |Coverage Status|
 =========================================================================
 
 
@@ -37,6 +37,8 @@ Basic Example
 
 
 
+.. |Pypi Release| image:: https://img.shields.io/pypi/v/graphic.svg
+.. |Python Version| image:: https://img.shields.io/pypi/pyversions/graphic.svg
 .. |Build Status| image:: https://travis-ci.org/chuter/graphic.svg?branch=master
 .. |Coverage Status| image:: https://codecov.io/gh/chuter/graphic/branch/master/graph/badge.svg
   :target: https://codecov.io/gh/chuter/graphic
