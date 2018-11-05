@@ -4,8 +4,8 @@
 import copy
 
 from .func import Func
-from .func import eq
 from .func import lookup_func
+from .func import eq
 
 
 class Expression:

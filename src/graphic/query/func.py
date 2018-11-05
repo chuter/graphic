@@ -5,6 +5,8 @@
 from typing import Any
 from six import add_metaclass
 
+from graphic.utils import is_py37
+
 
 class FuncMeta(type):
     __slots__ = ()
@@ -103,6 +105,9 @@ class Aggregation:
             _field
         )
 
+    def __deepcopy__(self, memodict):
+        return type(self)(self._field, self._val)
+
     def __str__(self):
         return self.__repr__()
 
@@ -131,3 +136,12 @@ def __getattr__(name: str) -> Any:
         raise AttributeError
 
     return target
+
+
+if not is_py37():
+    from itertools import chain
+
+    _all_opr_func_names = map(lambda opfunc: opfunc[0], __funcs__)
+
+    for reg_func in chain(_all_opr_func_names, __aggregations__):
+        locals()[reg_func] = lookup_func(reg_func)
