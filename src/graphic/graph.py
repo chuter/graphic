@@ -253,7 +253,7 @@ class Relationship(GraphEntity):
         return True
 
 
-class SubGraph(object):
+class SubGraph:
     # TODO(chuter) add any nodes, relationships and pathes!!!
     """Arbitrary, unordered collection of nodes and relationships."""
 

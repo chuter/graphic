@@ -10,7 +10,7 @@ from .query.query_utils import Q, Field, Expression
 __all__ = ['GQuery']
 
 
-class Context(object):
+class Context:
 
     FIELD_LOOKUP_SPLIT_BYS = ('__', '.', )
 
@@ -84,7 +84,7 @@ class Context(object):
         return Field(target_ent, field_name)
 
 
-class GQuery(object):
+class GQuery:
     # TODO(chuter): support path
     _LIMIT = 20
 

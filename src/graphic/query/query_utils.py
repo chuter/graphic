@@ -8,7 +8,7 @@ from .func import eq
 from .func import lookup_func
 
 
-class Expression(object):
+class Expression:
     r"""
     Used in query filter clause:
 
@@ -45,7 +45,7 @@ class Expression(object):
             return target_func(cls.LOOKUP_SPLIT_BY.join(parts[0:-1]), val)
 
 
-class Field(object):
+class Field:
 
     __slots__ = ('_ent', '_field_name')
 
@@ -71,7 +71,7 @@ class Field(object):
         )
 
 
-class Q(object):
+class Q:
     AND = 'AND'
     OR = 'OR'
 

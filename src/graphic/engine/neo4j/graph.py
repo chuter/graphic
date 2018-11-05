@@ -89,7 +89,7 @@ class Neo4jGraph(RemoteGraph):
             return session.run(cypher_query)
 
 
-class DummyEmptyGraphProxy(object):
+class DummyEmptyGraphProxy:
 
     def graph(self):
         return self

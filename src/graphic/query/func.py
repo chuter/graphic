@@ -32,7 +32,7 @@ class FuncMeta(type):
 
 
 @add_metaclass(FuncMeta)
-class Func(object):
+class Func:
 
     __slots__ = ()
 
@@ -84,7 +84,7 @@ for name, exp in __funcs__:
 
 
 @add_metaclass(FuncMeta)
-class Aggregation(object):
+class Aggregation:
 
     __slots__ = ()
 

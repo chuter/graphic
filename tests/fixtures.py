@@ -2,7 +2,7 @@
 # -*- encoding: utf-8 -*-
 
 
-class FakeNeo4jDriver(object):
+class FakeNeo4jDriver:
 
     def __init__(self, uri, **config):
         super().__init__()

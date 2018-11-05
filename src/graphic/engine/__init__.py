@@ -13,7 +13,7 @@ from graphic import Graph
 __all__ = ['Result']
 
 
-class Result(object):
+class Result:
     """
     Unify the interface for interact with the specific driver result.
 
