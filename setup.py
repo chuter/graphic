@@ -17,14 +17,15 @@ VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'six',
+    'neo4j'
 ]
 
 TEST_REQUIREMENTS = [
     'pytest-cov',
     'pytest-mock',
     'pytest-xdist',
-    'pytest==3.9.2'
+    'pytest==3.9.2',
+    'pytest-cookies'
 ]
 
 here = os.path.abspath(os.path.dirname(__file__))

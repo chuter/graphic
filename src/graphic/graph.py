@@ -42,7 +42,9 @@ class RemoteGraph(with_metaclass(RemoteGraphMeta)):
                 )
             )
 
-        return object.__new__(target_cls, *args, **config)
+        ins = object.__new__(target_cls)
+        ins.__init__(*args, **config)
+        return ins
 
     def compile(self, gquery, context):
         """
@@ -247,6 +249,67 @@ class Relationship(GraphEntity):
         return hash(self.node_from) ^ hash(self.type) ^ hash(self.node_to)
 
     def is_edge(self):
+        return True
+
+
+class Path(GraphEntity):
+    __slots__ = GraphEntity.__slots__ + (
+        '_start_node', '_end_node', '_min_len', '_max_len'
+    )
+
+    def __init__(self, node_from, node_to, type=None,
+                 with_direction=True, **properties):
+        super().__init__(**properties)
+        self._node_from = node_from
+        self._node_to = node_to
+        self._with_direction = with_direction
+        self._type = type
+
+    @property
+    def node_from(self):
+        return self._node_from
+
+    @property
+    def node_to(self):
+        return self._node_to
+
+    @property
+    def type(self):
+        return self._type
+
+    @property
+    def nodes(self):
+        yield self.node_from
+        yield self.node_to
+
+    @property
+    def with_direction(self):
+        return self._with_direction
+
+    def __str__(self):
+        str_parts = [self.node_from.__str__(), '-']
+
+        if self.type is not None:
+            str_parts.extend(['[', '{}:{}'.format(self.alias, self.type), ']'])
+        else:
+            str_parts.append('[{}]'.format(self.alias))
+
+        str_parts.append('-')
+
+        if self.with_direction:
+            str_parts.append('>')
+
+        str_parts.append(self.node_to.__str__())
+
+        return ''.join(str_parts)
+
+    def __hash__(self):
+        if self.type is None:
+            return hash(self.node_from) ^ hash(self.node_to)
+
+        return hash(self.node_from) ^ hash(self.type) ^ hash(self.node_to)
+
+    def is_path(self):
         return True
 
 

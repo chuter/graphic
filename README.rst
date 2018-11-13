@@ -31,7 +31,7 @@ Basic Example
     >>>geek = graphic.node('Geek', uid=2345)._as('g')
     >>>neo4j.push(graphic.relationship(boss, geek, 'WORKTAT', startat=3432432)
     >>>q = graphic.node().filter(id__gt=123).select('id')
-    >>>graph = neo4j.fetch()
+    >>>graph = neo4j.fetch(q)
     >>>from graphic.query.func import avg
     >>>q = graphic.node().select(avg('uid')).order_by('-id').limit(10)
 
