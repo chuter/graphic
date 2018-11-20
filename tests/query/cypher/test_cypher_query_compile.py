@@ -38,11 +38,11 @@ class TestSingleNodeSingleMatchQueryCompile:
         (
             graphic.node("User", uid=12345, name="chuter")._as('geek'),
             ((
-                r'MATCH (geek:User) WHERE (geek.uid=12345 AND '
+                r"MATCH (geek:User) WHERE (geek.uid=12345 AND "
                 r"geek.name='chuter') RETURN geek LIMIT 20"
             ), (
                 r"MATCH (geek:User) WHERE (geek.name='chuter' AND "
-                r'geek.uid=12345") RETURN geek LIMIT 20'
+                r"geek.uid=12345) RETURN geek LIMIT 20"
             ), )
         )
     ])

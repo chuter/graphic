@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
 
+import sys
 import random
 import graphic
 
@@ -60,7 +61,14 @@ def build_relations(count):
 
 
 graph = graphic.use_neo4j()
-graph.push(*company_nodes, *geek_nodes, *build_relations(20))
+
+
+if sys.version_info.minor == 4:
+    graph.push(*company_nodes)
+    graph.push(*geek_nodes)
+    graph.push(*build_relations(20))
+else:
+    graph.push(*company_nodes, *geek_nodes, *build_relations(20)) # noqa
 
 
 query = graphic.relationship(

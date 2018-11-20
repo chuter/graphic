@@ -19,6 +19,9 @@ VERSION = None
 REQUIRED = [
     'neo4j'
 ]
+if sys.version_info.minor == 4:
+    REQUIRED.append('typing')
+
 
 TEST_REQUIREMENTS = [
     'pytest-cov',
