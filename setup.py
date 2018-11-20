@@ -80,7 +80,7 @@ setup(
     long_description=long_description,
     author=AUTHOR,
     author_email=EMAIL,
-    python_requires=">=3.5",
+    python_requires=">=3.4",
     url=URL,
     packages=find_packages('src'),
     package_dir={'': 'src'},
