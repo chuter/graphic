@@ -15,6 +15,12 @@ jobs:
         - make flake8
         - make test-readme
         - make ci
+      python: '3.4'
+    - stage: test
+      script:
+        - make flake8
+        - make test-readme
+        - make ci
       python: '3.5'
     - stage: test
       script:
